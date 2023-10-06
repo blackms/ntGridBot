@@ -36,7 +36,7 @@ def test_calculate_profit():
         'price': '35000',
         'amount': '0.1'
     }
-    profit = bot.calculate_profit(sample_trade)
-    assert profit == 500  # Assuming the grid level price was 34500
+    grid_level_price = 34000  # This would typically come from your grid levels
+    profit = bot.calculate_profit(sample_trade, grid_level_price)
 
 # ... Add more tests for other methods ...

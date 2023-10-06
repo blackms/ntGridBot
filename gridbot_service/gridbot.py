@@ -29,13 +29,8 @@ class Gridbot:
             )
             self.active_orders.append(order)
 
-    def calculate_profit(self, trade):
+    def calculate_profit(self, trade, grid_level_price):
         order_price = float(trade['price'])
-
-        if 'grid_level_price' not in self.config:
-            raise ValueError("Grid level price is not set in the configuration.")
-
-        grid_level_price = float(self.config['grid_level_price'])
         order_size = float(trade['amount'])
         profit = (order_price - grid_level_price) * order_size
         return profit
