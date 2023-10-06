@@ -2,6 +2,7 @@ from .exchange_interface import ExchangeInterface
 import time
 import ccxt
 
+
 class Gridbot:
 
     def __init__(self, config, exchange_name):
