@@ -1,13 +1,12 @@
-from .exchange_interface import ExchangeInterface
 import time
+
 import ccxt
+
 from database_service.db_operations import (
     create_grid_configuration,
-    log_active_trade,
-    close_active_trade,
-    create_gridbot_instance,
-    update_gridbot_instance_status
+    create_gridbot_instance
 )
+from .exchange_interface import ExchangeInterface
 
 
 class Gridbot:
@@ -104,3 +103,57 @@ class Gridbot:
     def stop(self):
         # Logic to stop the Gridbot
         self.running = False  # You'll need to use this flag in the monitor_orders loop to break out of it
+
+    def update_config(self, new_config: dict):
+        # Check if the steps have changed
+        if 'step' in new_config and new_config['step'] != self.config['step']:
+            # Cancel all remaining orders
+            for order in self.active_orders:
+                self.exchange.cancel_order(order['id'], self.config['trading_pair'])
+            # Update the step in the configuration
+            self.config['step'] = new_config['step']
+            # Recalculate the grid levels
+            self.calculate_grid_levels()
+            # Place new orders based on the new grid levels
+            self.place_orders()
+
+        # Check if the stop loss has changed
+        if 'stop_loss' in new_config:
+            self.config['stop_loss'] = new_config['stop_loss']
+            # Here, you can add any logic if you need to adjust open positions based on the new stop loss
+
+        # Check if the take profit has changed
+        if 'take_profit' in new_config:
+            self.config['take_profit'] = new_config['take_profit']
+            # Adjust the logic in check_profit_and_restart or any other method that uses take profit
+
+        # Update any other configuration parameters
+        for key, value in new_config.items():
+            if key not in ['step', 'stop_loss', 'take_profit']:
+                self.config[key] = value
+
+    def get_status(self):
+        return "Running" if self.running else "Stopped"
+
+    def get_config(self):
+        return self.config
+
+    def get_active_trades(self):
+        # Assuming the ExchangeInterface has a method to fetch active trades
+        return self.exchange.fetch_active_trades(self.config['trading_pair'])
+
+    def get_trade_history(self):
+        # Assuming the ExchangeInterface has a method to fetch trade history
+        return self.exchange.fetch_trade_history(self.config['trading_pair'])
+
+    def start_instance(self, config: dict):
+        # Store the current configuration
+        self.config = config
+        # Start the bot
+        self.start()
+        # Assuming the bot instance has an ID, return it
+        return self.grid_id
+
+    def stop_instance(self, instance_id: int):
+        # For now, we'll assume there's only one instance, so we'll stop the bot
+        self.stop()

@@ -11,6 +11,7 @@ router = APIRouter()
 
 bot = None  # Initialize bot to None at the module level
 
+
 @router.post("/gridbot/start")
 async def start_bot(config: dict):
     global bot
