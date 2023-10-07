@@ -1,6 +1,13 @@
 from .exchange_interface import ExchangeInterface
 import time
 import ccxt
+from database_service.db_operations import (
+    create_grid_configuration,
+    log_active_trade,
+    close_active_trade,
+    create_gridbot_instance,
+    update_gridbot_instance_status
+)
 
 
 class Gridbot:
@@ -74,6 +81,21 @@ class Gridbot:
         self.place_orders()
 
     def start(self):
+        # Store the grid configuration in the database
+        self.grid_id = create_grid_configuration(
+            self.config["trading_pair"],
+            self.config["grid_range"],
+            self.config["grid_levels"],
+            self.config["order_size"],
+            self.config["order_type"],
+            self.config["position_type"],
+            self.config["step"],
+            self.config["leverage"],
+            self.config["stop_loss"],
+            self.config["take_profit"]
+        )
+        # Create a new Gridbot instance in the database
+        create_gridbot_instance(self.grid_id, status="active")
         self.running = True
         self.calculate_grid_levels()
         self.place_orders()

@@ -1,19 +1,29 @@
-import httpx
+import pytest
 from fastapi.testclient import TestClient
-
+from unittest.mock import patch
 from main import app
 
 client = TestClient(app)
 
 
-# Test starting the bot
+# Mock the Gridbot class
+class MockGridbot:
+    def __init__(self, config, exchange_name):
+        pass
+
+    def start(self):
+        pass
+
+    # ... [mock other methods as needed]
+
+
+# Use the mock class in tests
+@patch('endpoints.Gridbot', new=MockGridbot)
 def test_start_bot():
-    config = {
-        # Sample configuration for the test
+    response = client.post("/gridbot/start", json={
         "trading_pair": "BTC/USDT",
-        # ... add other configuration parameters as needed
-    }
-    response = client.post("/bot/start", json=config)
+        # ... [other configuration parameters]
+    })
     assert response.status_code == 200
     assert response.json() == {"status": "Bot started successfully"}
 

@@ -1,5 +1,6 @@
 import ccxt
 
+
 class ExchangeInterface:
 
     def __init__(self, exchange_name):

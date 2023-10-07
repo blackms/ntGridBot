@@ -1,24 +1,47 @@
-from fastapi import APIRouter
+from database_service.db_operations import (
+    get_all_grid_configurations,
+    get_grid_configuration_by_id,
+    delete_grid_configuration
+)
+from fastapi import APIRouter, HTTPException
 
 from gridbot_service.gridbot import Gridbot
 
 router = APIRouter()
 
-# Initialize Gridbot
-bot = Gridbot()  # You can pass a default configuration if needed
+bot = None  # Initialize bot to None at the module level
 
-
-@router.post("/start")
+@router.post("/gridbot/start")
 async def start_bot(config: dict):
-    bot.initialize(config)
+    global bot
+    bot = Gridbot(config, 'bybit')  # Initialize bot with provided config
     bot.start()
     return {"status": "Bot started successfully"}
 
 
 @router.post("/stop")
 async def stop_bot():
-    bot.stop()
-    return {"status": "Bot stopped successfully"}
+    try:
+        bot.stop()
+        return {"status": "Bot stopped successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/grid-configurations")
+async def list_grid_configurations():
+    return get_all_grid_configurations()
+
+
+@router.get("/grid-configuration/{grid_id}")
+async def get_grid_configuration(grid_id: int):
+    return get_grid_configuration_by_id(grid_id)
+
+
+@router.delete("/grid-configuration/{grid_id}")
+async def delete_grid_configuration(grid_id: int):
+    delete_grid_configuration(grid_id)
+    return {"status": "Configuration deleted successfully"}
 
 
 @router.get("/status")
