@@ -36,10 +36,28 @@ class Gridbot:
             )
             self.active_orders.append(order)
 
+    def check_stop_loss(self):
+        # Assuming the ExchangeInterface has a method to fetch the current price
+        current_price = self.exchange.fetch_current_price(self.config['trading_pair'])
+        if self.config['position_type'] == 'long' and current_price <= self.config['stop_loss']:
+            self.stop()
+            print("Stop loss triggered for long position.")
+        elif self.config['position_type'] == 'short' and current_price >= self.config['stop_loss']:
+            self.stop()
+            print("Stop loss triggered for short position.")
+
+    def check_take_profit(self):
+        profit_percentage = (self.cumulative_profit / self.config['total_investment']) * 100
+        if profit_percentage >= self.config['take_profit']:
+            self.restart_grid()
+
     def calculate_profit(self, trade, grid_level_price):
         order_price = float(trade['price'])
         order_size = float(trade['amount'])
         profit = (order_price - grid_level_price) * order_size
+        # Adjusting for fees
+        fee_percentage = self.exchange.get_fee_percentage(order_type=trade['type'])
+        profit = profit * (1 - fee_percentage)
         return profit
 
     def monitor_orders(self):
@@ -54,6 +72,8 @@ class Gridbot:
                         if trade:
                             self.cumulative_profit += self.calculate_profit(trade)
                             self.check_profit_and_restart()
+                            self.check_stop_loss()
+                            self.check_take_profit()
 
                 time.sleep(self.config.get('monitoring_interval', 10))
 
